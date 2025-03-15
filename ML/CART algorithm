@@ -1,0 +1,89 @@
+# Import required libraries
+import pandas as pd  # For data manipulation
+from sklearn.tree import DecisionTreeClassifier, plot_tree  # For decision tree model and visualization
+from sklearn.preprocessing import LabelEncoder  # To encode categorical data
+import matplotlib.pyplot as plt  # For visualizing the decision tree
+
+# Step 1: Load data from Excel file
+# Load the Excel file into a DataFrame
+# Replace 'CART.xlsx' with the actual file path
+data = pd.read_excel('CART.xlsx')
+
+# Display the first 5 rows to confirm successful data loading
+print("First 5 rows of data:\n", data.head())
+
+# Step 2: Split data into features (X) and target (y)
+# X contains all columns except the last one, y contains the last column
+X = data.iloc[:, :-1]
+y = data.iloc[:, -1]
+
+# Display the first 5 rows of features and target for verification
+print("\nFeatures (X) - first 5 rows:\n", X.head())
+print("\nTarget (y) - first 5 rows:\n", y.head())
+
+# Step 3: Encode categorical features to numerical values
+# Create LabelEncoders for each column in X
+le_Age = LabelEncoder()
+le_Income = LabelEncoder()
+le_BrowsingHours = LabelEncoder()
+le_PreviousPurchase = LabelEncoder()
+
+# Transform each column in X to numerical values
+X.loc[:, 'Age'] = le_Age.fit_transform(X['Age'])
+X.loc[:, 'Income'] = le_Income.fit_transform(X['Income'])
+X.loc[:, 'BrowsingHours'] = le_BrowsingHours.fit_transform(X['BrowsingHours'])
+X.loc[:, 'PreviousPurchase'] = le_PreviousPurchase.fit_transform(X['PreviousPurchase'])
+
+# Display the transformed feature data
+print("\nTransformed Features (X):\n", X.head())
+
+# Encode the target column (y)
+le_BuyComputer = LabelEncoder()
+y = le_BuyComputer.fit_transform(y)
+
+# Display the transformed target data
+print("\nTransformed Target (y):\n", y)
+
+# Step 4: Train the Decision Tree model
+# Create a DecisionTreeClassifier using 'gini' for CART algorithm
+classifier = DecisionTreeClassifier(criterion='gini')
+
+# Fit the model with the encoded features (X) and target (y)
+classifier.fit(X, y)
+
+# Step 5: Helper function to encode new input data
+# Converts input categorical values to numerical values
+def encode_input(inp):
+    inp[0] = le_Age.transform([inp[0]])[0]  # Encode 'Age'
+    inp[1] = le_Income.transform([inp[1]])[0]  # Encode 'Income'
+    inp[2] = le_BrowsingHours.transform([inp[2]])[0]  # Encode 'BrowsingHours'
+    inp[3] = le_PreviousPurchase.transform([inp[3]])[0]  # Encode 'PreviousPurchase'
+    return [inp]
+
+# Step 6: Predict for a new input
+# Define a new input data point (categorical values)
+new_inp = ["30", "25K", "1", "Yes"]
+
+# Encode the input data
+enc_inp = encode_input(new_inp)
+
+# Create a DataFrame for the encoded input
+enc_inp_df = pd.DataFrame(enc_inp, columns=X.columns)
+
+# Predict the output using the trained model
+y_pred = classifier.predict(enc_inp_df)
+
+# Convert numerical prediction back to original category and display it
+print("\nPrediction for input {}: {}".format(new_inp, le_BuyComputer.inverse_transform(y_pred)[0]))
+
+# Step 7: Visualize the decision tree
+# Plot the decision tree
+plt.figure(figsize=(12, 8))  # Set the plot size
+plot_tree(
+    classifier,  # Trained classifier
+    feature_names=X.columns,  # Feature names
+    class_names=le_BuyComputer.classes_,  # Class names
+    filled=True  # Color nodes based on class
+)
+plt.title("Decision Tree Visualization")  # Title for the plot
+plt.show()  # Display the tree
