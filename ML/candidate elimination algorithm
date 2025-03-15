@@ -1,0 +1,48 @@
+import pandas as pd
+
+def candidate_elimination_algorithm(file_path, target_column):
+    if file_path.endswith(".csv"):
+        data = pd.read_csv(file_path)
+    elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
+        data = pd.read_excel(file_path)
+    else:
+        raise ValueError("Unsupported file format. Use CSV or Excel file.")
+    
+    concepts = data.drop(columns=[target_column]).values
+    target = data[target_column].values
+    
+    specific_h = concepts[0].copy()
+    general_h = [["?" for _ in range(len(specific_h))] for _ in range(len(specific_h))]
+    
+    print("\nInitial Specific Hypothesis:", specific_h)
+    print("Initial General Hypothesis:", general_h)
+    
+    for i, instance in enumerate(concepts):
+        print(f"\nProcessing instance {i + 1}: {instance}, Target: {target[i]}")
+        
+        if target[i] == "Yes":
+            for x in range(len(specific_h)):
+                if instance[x] != specific_h[x]:
+                    specific_h[x] = '?'
+                    general_h[x][x] = '?'
+        elif target[i] == "No":
+            for x in range(len(specific_h)):
+                if instance[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+
+        print("Updated Specific Hypothesis:", specific_h)
+        print("Updated General Hypothesis:", general_h)
+
+    general_h = [h for h in general_h if h != ['?' for _ in range(len(specific_h))]]
+    
+    return specific_h, general_h
+
+file_path = "CandidateElimination.csv"
+target_column = "Answer"
+
+specific_hypothesis, general_hypothesis = candidate_elimination_algorithm(file_path, target_column)
+
+print("\nFinal Specific Hypothesis:", specific_hypothesis)
+print("Final General Hypothesis:", general_hypothesis)
